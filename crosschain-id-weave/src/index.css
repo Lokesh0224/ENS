@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Cross-Chain Identity Hub Design System - Modern DeFi Aesthetic */
+
+@layer base {
+  :root {
+    /* Dark theme base */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    /* Glass morphism cards */
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --card-glass: 240 5% 8%;
+
+    /* Popover components */
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Blockchain primary - Electric blue */
+    --primary: 220 100% 60%;
+    --primary-foreground: 240 10% 3.9%;
+    --primary-glow: 220 100% 70%;
+
+    /* Secondary - Deep purple */
+    --secondary: 260 50% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Muted elements */
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 64%;
+
+    /* Accent - Crypto green */
+    --accent: 120 100% 50%;
+    --accent-foreground: 240 10% 3.9%;
+
+    /* Error/Warning states */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 240 10% 3.9%;
+
+    /* Form inputs */
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 220 100% 60%;
+
+    /* Border radius */
+    --radius: 0.75rem;
+
+    /* Blockchain gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    
+    /* Shadows and glows */
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.3);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.7);
+    
+    /* Animation curves */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(240 10% 2%) 100%);
+    min-height: 100vh;
+    font-feature-settings: "cv11", "ss01";
+    font-variation-settings: "opsz" 32;
+  }
+
+  /* Glass morphism utility */
+  .glass {
+    background: hsl(var(--card-glass) / 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.2);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 4px;
+  }
+}
