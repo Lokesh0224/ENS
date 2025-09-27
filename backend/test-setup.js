@@ -1,7 +1,3 @@
-/**
- * Test script to verify backend setup
- * Run with: node test-setup.js
- */
 
 const express = require('express');
 const bitcoinVerify = require('./utils/bitcoinVerify');

@@ -1,15 +1,8 @@
-/**
- * Example script demonstrating the Cross-Chain Identity Hub API
- * Run with: node examples/api-test.js
- */
 
 const http = require('http');
 
 const API_BASE = 'http://localhost:3000';
 
-/**
- * Make HTTP request
- */
 function makeRequest(method, path, data = null) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -44,9 +37,6 @@ function makeRequest(method, path, data = null) {
   });
 }
 
-/**
- * Test the API endpoints
- */
 async function testAPI() {
   console.log('🧪 Testing Cross-Chain Identity Hub API...\n');
 

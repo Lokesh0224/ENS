@@ -5,27 +5,14 @@ import "forge-std/Script.sol";
 import "../CrossChainResolver.sol";
 import "../lib/ens/IENSRegistry.sol";
 
-/**
- * @title UsageExample
- * @dev Example script demonstrating how to use CrossChainResolver
- * @notice Shows how to set and query verified addresses
- * @author Cross-Chain Identity Hub
- */
 contract UsageExample is Script {
-    // ============ State Variables ============
     
     CrossChainResolver public resolver;
     IENSRegistry public ensRegistry;
     
-    // Example data
     bytes32 public constant EXAMPLE_NODE = keccak256("alice.eth");
     address public constant EXAMPLE_OWNER = address(0x1234567890123456789012345678901234567890);
     
-    // ============ Functions ============
-    
-    /**
-     * @dev Example of setting verified addresses
-     */
     function run() external {
         // This would be called after deployment
         // address resolverAddress = 0x...; // Deployed resolver address
@@ -42,9 +29,7 @@ contract UsageExample is Script {
         _demonstrateRemovingAddresses();
     }
     
-    /**
-     * @dev Demonstrate setting verified addresses
-     */
+   
     function _demonstrateSettingAddresses() internal {
         console.log("\n🔗 Setting Verified Addresses");
         console.log("-------------------------------");

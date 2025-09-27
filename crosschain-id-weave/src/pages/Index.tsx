@@ -20,7 +20,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <div className="relative h-96 overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -39,10 +38,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Wallet Connection Card */}
           {!isConnected && (
             <div className="flex justify-center">
               <div className="w-full max-w-md">
@@ -55,7 +52,6 @@ const Index = () => {
             </div>
           )}
 
-          {/* Main Interface */}
           {isConnected && provider && (
             <Tabs defaultValue="link" className="w-full">
               <TabsList className="grid w-full grid-cols-2 glass">
@@ -80,7 +76,6 @@ const Index = () => {
             </Tabs>
           )}
 
-          {/* Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
             <Card className="glass">
               <CardContent className="p-6 text-center space-y-4">

@@ -1,17 +1,6 @@
 const nacl = require('tweetnacl');
 
-/**
- * Solana signature verification utility
- * Verifies Ed25519 signatures for Solana addresses
- */
 
-/**
- * Verifies a Solana signature
- * @param {string} address - Solana public key (base58 encoded)
- * @param {string} message - Original message that was signed
- * @param {string} signature - Base58 encoded signature
- * @returns {Promise<boolean>} - True if signature is valid
- */
 async function verifySignature(address, message, signature) {
   try {
     console.log(`�� Verifying Solana signature for address: ${address}`);
@@ -44,11 +33,6 @@ async function verifySignature(address, message, signature) {
   }
 }
 
-/**
- * Validates Solana address format
- * @param {string} address - Solana address to validate
- * @returns {boolean} - True if address format is valid
- */
 function isValidSolanaAddress(address) {
   try {
     // Solana addresses are base58 encoded and typically 32-44 characters
@@ -59,11 +43,6 @@ function isValidSolanaAddress(address) {
   }
 }
 
-/**
- * Converts base58 string to Uint8Array
- * @param {string} base58 - Base58 encoded string
- * @returns {Uint8Array} - Decoded bytes
- */
 function base58ToUint8Array(base58) {
   const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   const base = alphabet.length;
@@ -98,20 +77,12 @@ function base58ToUint8Array(base58) {
   return new Uint8Array(bytes);
 }
 
-/**
- * Creates a message for signing (Solana standard format)
- * @param {string} message - Original message
- * @returns {string} - Formatted message for Solana signing
- */
+
 function createSignableMessage(message) {
   // Solana typically uses the raw message for signing
   return message;
 }
 
-/**
- * Generates a keypair for testing (development only)
- * @returns {Object} - Keypair with publicKey and secretKey
- */
 function generateKeypair() {
   const keypair = nacl.sign.keyPair();
   return {
@@ -120,11 +91,6 @@ function generateKeypair() {
   };
 }
 
-/**
- * Converts Uint8Array to base58 string
- * @param {Uint8Array} bytes - Bytes to encode
- * @returns {string} - Base58 encoded string
- */
 function uint8ArrayToBase58(bytes) {
   const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   const base = alphabet.length;

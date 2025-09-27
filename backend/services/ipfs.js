@@ -2,10 +2,6 @@ const { create } = require('ipfs-http-client');
 const fs = require('fs').promises;
 const path = require('path');
 
-/**
- * IPFS service for uploading and managing proof data
- * Supports both real IPFS and local mock storage
- */
 
 class IPFSService {
   constructor() {
@@ -15,9 +11,6 @@ class IPFSService {
     this.initialize();
   }
 
-  /**
-   * Initialize IPFS client or local storage
-   */
   async initialize() {
     if (this.useRealIPFS) {
       try {
@@ -41,11 +34,7 @@ class IPFSService {
     }
   }
 
-  /**
-   * Upload proof to IPFS or local storage
-   * @param {Object} proof - Proof object to upload
-   * @returns {Promise<string>} - IPFS hash or local file path
-   */
+ 
   async uploadProof(proof) {
     try {
       const proofData = JSON.stringify(proof, null, 2);
@@ -61,11 +50,7 @@ class IPFSService {
     }
   }
 
-  /**
-   * Upload to real IPFS
-   * @param {string} data - JSON data to upload
-   * @returns {Promise<string>} - IPFS hash
-   */
+  
   async uploadToIPFS(data) {
     try {
       const result = await this.ipfsClient.add(data);
@@ -78,11 +63,6 @@ class IPFSService {
     }
   }
 
-  /**
-   * Upload to local storage (mock IPFS)
-   * @param {string} data - JSON data to upload
-   * @returns {Promise<string>} - Local file path
-   */
   async uploadToLocal(data) {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -100,11 +80,7 @@ class IPFSService {
     }
   }
 
-  /**
-   * Retrieve proof from IPFS or local storage
-   * @param {string} hash - IPFS hash or local file identifier
-   * @returns {Promise<Object>} - Proof object
-   */
+  
   async getProof(hash) {
     try {
       if (this.useRealIPFS && this.ipfsClient && hash.startsWith('Qm')) {
@@ -118,11 +94,7 @@ class IPFSService {
     }
   }
 
-  /**
-   * Retrieve from real IPFS
-   * @param {string} hash - IPFS hash
-   * @returns {Promise<Object>} - Proof object
-   */
+  
   async getFromIPFS(hash) {
     try {
       const chunks = [];
@@ -137,11 +109,6 @@ class IPFSService {
     }
   }
 
-  /**
-   * Retrieve from local storage
-   * @param {string} hash - Local file identifier
-   * @returns {Promise<Object>} - Proof object
-   */
   async getFromLocal(hash) {
     try {
       // Find file by hash pattern or use direct path
@@ -161,10 +128,7 @@ class IPFSService {
     }
   }
 
-  /**
-   * Get service status
-   * @returns {Object} - Service status information
-   */
+
   getStatus() {
     return {
       useRealIPFS: this.useRealIPFS,

@@ -2,27 +2,6 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 
-/**
- * POST /challenge
- * Creates a challenge for address verification
- * 
- * Request body:
- * {
- *   "ensName": "alice.eth",
- *   "chain": "bitcoin" | "solana",
- *   "address": "1abc...def"
- * }
- * 
- * Response:
- * {
- *   "ensName": "alice.eth",
- *   "chain": "bitcoin",
- *   "address": "1abc...def",
- *   "nonce": "random-string",
- *   "timestamp": "2025-01-27T12:00:00.000Z",
- *   "purpose": "bind-address-to-ens"
- * }
- */
 router.post('/', (req, res) => {
   try {
     const { ensName, chain, address } = req.body;

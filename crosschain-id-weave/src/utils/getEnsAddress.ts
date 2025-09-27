@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
 
-// SLIP-44 coin types: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 const COIN_TYPES: Record<string, number> = {
   ethereum: 60,   // ETH
   bitcoin: 0,     // BTC

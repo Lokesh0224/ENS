@@ -4,31 +4,6 @@ const solanaVerify = require('../utils/solanaVerify');
 const ipfsService = require('../services/ipfs');
 const router = express.Router();
 
-/**
- * POST /verify
- * Verifies a signed message and returns proof hash
- * 
- * Request body:
- * {
- *   "chain": "bitcoin" | "solana",
- *   "address": "1abc...def",
- *   "signature": "3045...",
- *   "nonce": "challenge-nonce",
- *   "message": "original-message-that-was-signed"
- * }
- * 
- * Response:
- * {
- *   "success": true,
- *   "proofHash": "0x...",
- *   "ipfsHash": "Qm...",
- *   "metadata": {
- *     "chain": "bitcoin",
- *     "address": "1abc...def",
- *     "verifiedAt": "2025-01-27T12:00:00.000Z"
- *   }
- * }
- */
 router.post('/', async (req, res) => {
   try {
     const { chain, address, signature, nonce, message } = req.body;
