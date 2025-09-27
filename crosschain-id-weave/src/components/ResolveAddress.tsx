@@ -38,6 +38,9 @@ const ResolveAddress: React.FC<ResolveAddressProps> = ({ provider }) => {
     { value: 'bitcoin', label: 'Bitcoin', icon: '₿' },
     { value: 'solana', label: 'Solana', icon: '◎' },
     { value: 'ethereum', label: 'Ethereum', icon: 'Ξ' },
+    { value: 'polkadot', label: 'Polkadot', icon: '⚪' },
+    { value: 'cosmos', label: 'Cosmos', icon: '🌌' },
+
   ];
 
   const resolveAddress = async () => {
