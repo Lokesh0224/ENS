@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,19 +22,18 @@ const chains = [
   { value: "ethereum", label: "Ethereum", icon: "Ξ" },
 ];
 
+// Hash JSON to bytes32
 const hashChallenge = async (challengeJson: object): Promise<string> => {
   const jsonString = JSON.stringify(challengeJson);
   const encoder = new TextEncoder();
   const data = encoder.encode(jsonString);
-
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-
   return "0x" + hashHex;
 };
 
-const LinkChain = ({ walletAddress, provider }) => {
+const LinkChain = ({ walletAddress }) => {
   const { toast } = useToast();
 
   const [fetchedAddresses, setFetchedAddresses] = useState({});
@@ -46,12 +46,13 @@ const LinkChain = ({ walletAddress, provider }) => {
   const [verificationResult, setVerificationResult] = useState(null);
   const [isStoringOnChain, setIsStoringOnChain] = useState(false);
 
-
+  // ======= Fetch verified addresses from contract =======
   const fetchVerifiedAddresses = async () => {
-    if (!walletAddress || !provider) return;
+    if (!walletAddress || !window.ethereum) return;
 
     try {
-      const signer = provider.getSigner();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const resolverContract = new ethers.Contract(RESOLVER_ADDRESS, CrossChainResolverABI.abi, signer);
       const node = keccak256(toUtf8Bytes(walletAddress));
 
@@ -80,59 +81,79 @@ const LinkChain = ({ walletAddress, provider }) => {
     fetchVerifiedAddresses();
   }, [walletAddress]);
 
-
+  // ======= Generate Challenge =======
   const generateChallenge = async () => {
     if (!selectedChain || !chainAddress) {
-      toast({ title: "Missing Information", description: "Select a chain and enter an address.", variant: "destructive" });
+      toast({ title: "Missing Info", description: "Select a chain and enter an address.", variant: "destructive" });
       return;
     }
     setIsGeneratingChallenge(true);
+
     const challengeData = {
       chainId: selectedChain,
       address: chainAddress,
       challenge: `Verify ownership of ${selectedChain} address ${chainAddress} for ENS identity ${walletAddress} at ${Date.now()}`,
       timestamp: Date.now(),
     };
+
     setChallenge(challengeData);
-    toast({ title: "Challenge Generated", description: "Sign this challenge with your non-EVM wallet." });
+    toast({ title: "Challenge Generated", description: "Sign this challenge with your wallet." });
     setIsGeneratingChallenge(false);
   };
 
+  // ======= Sign Challenge with MetaMask =======
+  const signChallengeWithWallet = async () => {
+    if (!challenge) return;
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage(JSON.stringify(challenge));
+      setSignedProof(signature);
+      toast({ title: "Challenge Signed", description: signature });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Signing Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  // ======= Submit Proof to Backend (or store locally for now) =======
   const submitProof = async () => {
-    if (!challenge || !signedProof) {
-      toast({ title: "Missing Proof", description: "Please provide the signed proof.", variant: "destructive" });
+    if (!signedProof) {
+      toast({ title: "Missing Proof", description: "Sign the challenge first.", variant: "destructive" });
       return;
     }
-
     setIsVerifying(true);
     try {
       const proofHash = await hashChallenge(challenge);
-
       const verificationData = {
         proofHash,
         verified: true,
         chainId: challenge.chainId,
         address: challenge.address,
+        signedProof,
       };
-
       setVerificationResult(verificationData);
-      toast({ title: "Verification Successful", description: "Your proof has been verified successfully." });
-    } catch (error) {
-      console.error(error);
-      toast({ title: "Verification Failed", description: "Failed to hash challenge.", variant: "destructive" });
+      toast({ title: "Verification Successful", description: "Proof verified locally." });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
     } finally {
       setIsVerifying(false);
     }
   };
 
+  // ======= Store on-chain =======
   const storeOnChain = async () => {
-    if (!verificationResult || !provider) return;
+    if (!verificationResult || !window.ethereum) return;
     setIsStoringOnChain(true);
     try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const resolverContract = new ethers.Contract(RESOLVER_ADDRESS, CrossChainResolverABI.abi, signer);
-
       const node = keccak256(toUtf8Bytes(walletAddress));
+
       const tx = await resolverContract.setVerifiedAddress(
         node,
         verificationResult.chainId,
@@ -140,14 +161,14 @@ const LinkChain = ({ walletAddress, provider }) => {
         verificationResult.proofHash,
         Math.floor(Date.now() / 1000)
       );
-      await tx.wait();
-      toast({ title: "Stored On-Chain", description: `Transaction: ${tx.hash.slice(0, 10)}...` });
 
+      await tx.wait();
+      toast({ title: "Stored On-Chain", description: `Tx: ${tx.hash.slice(0, 10)}...` });
       fetchVerifiedAddresses();
       resetFlow();
-    } catch (error) {
-      console.error(error);
-      toast({ title: "On-Chain Storage Failed", description: error?.reason || error?.message || "Unknown error", variant: "destructive" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "On-Chain Storage Failed", description: err.message, variant: "destructive" });
     }
     setIsStoringOnChain(false);
   };
@@ -185,9 +206,7 @@ const LinkChain = ({ walletAddress, provider }) => {
           <h3 className="font-semibold">Verified Addresses</h3>
           {chains.map((chain) => (
             <div key={chain.value} className="flex items-center space-x-2">
-              <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">
-                {chain.icon}
-              </Badge>
+              <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">{chain.icon}</Badge>
               <span className="flex-1 font-mono">{fetchedAddresses[chain.value] || "Not Verified"}</span>
               {fetchedAddresses[chain.value] && (
                 <Button variant="ghost" size="sm" onClick={() => copyToClipboard(fetchedAddresses[chain.value])}>
@@ -196,18 +215,15 @@ const LinkChain = ({ walletAddress, provider }) => {
               )}
             </div>
           ))}
-          <Button onClick={fetchVerifiedAddresses} className="w-full mt-2">
-            Refresh Addresses
-          </Button>
+          <Button onClick={fetchVerifiedAddresses} className="w-full mt-2">Refresh Addresses</Button>
         </div>
 
         <Separator />
 
+        {/* New address workflow */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">
-              1
-            </Badge>
+            <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">1</Badge>
             <h3 className="font-semibold">Link New Address</h3>
           </div>
 
@@ -215,22 +231,16 @@ const LinkChain = ({ walletAddress, provider }) => {
             <div className="space-y-2">
               <Label>Blockchain</Label>
               <Select value={selectedChain} onValueChange={setSelectedChain}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select blockchain" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select blockchain" /></SelectTrigger>
                 <SelectContent>
                   {chains.map((chain) => (
                     <SelectItem key={chain.value} value={chain.value}>
-                      <div className="flex items-center space-x-2">
-                        <span>{chain.icon}</span>
-                        <span>{chain.label}</span>
-                      </div>
+                      <div className="flex items-center space-x-2"><span>{chain.icon}</span><span>{chain.label}</span></div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label>Address</Label>
               <Input placeholder="Enter address" value={chainAddress} onChange={(e) => setChainAddress(e.target.value)} />
@@ -240,106 +250,46 @@ const LinkChain = ({ walletAddress, provider }) => {
           <Button onClick={generateChallenge} disabled={!selectedChain || !chainAddress || isGeneratingChallenge} className="w-full">
             {isGeneratingChallenge ? "Generating..." : "Generate Challenge"}
           </Button>
-        </div>
 
-        {challenge && (
-          <>
-            <Separator />
+          {challenge && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">
-                  2
-                </Badge>
-                <h3 className="font-semibold">Sign Challenge</h3>
-              </div>
-
-              <div className="bg-muted rounded-lg p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Challenge JSON:</Label>
-                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(JSON.stringify(challenge, null, 2))}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-                <pre className="text-xs bg-background rounded p-2 overflow-x-auto">{JSON.stringify(challenge, null, 2)}</pre>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Proof Hash</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Click 'Generate Hash' to see proof hash"
-                    value={verificationResult?.proofHash || ""}
-                    readOnly
-                  />
-                  <Button
-                    onClick={async () => {
-                      try {
-                        const hash = await hashChallenge(challenge);
-                        setVerificationResult({
-                          ...verificationResult,
-                          proofHash: hash,
-                          chainId: challenge.chainId,
-                          address: challenge.address,
-                          verified: false,
-                        });
-                        toast({ title: "Hash Generated", description: hash });
-                      } catch (err) {
-                        console.error(err);
-                        toast({ title: "Hash Error", description: "Failed to generate hash", variant: "destructive" });
-                      }
-                    }}
-                  >
-                    Generate Hash
-                  </Button>
-                </div>
-              </div>
+              <Separator />
+              <Button onClick={signChallengeWithWallet} className="w-full">Sign Challenge</Button>
 
               <div className="space-y-2">
                 <Label>Signed Proof</Label>
-                <Input placeholder="Paste signed proof here" value={signedProof} onChange={(e) => setSignedProof(e.target.value)} />
+                <Input placeholder="Signed proof will appear here" value={signedProof} readOnly />
               </div>
 
               <Button onClick={submitProof} disabled={!signedProof || isVerifying} className="w-full">
                 {isVerifying ? "Verifying..." : "Submit Proof"}
               </Button>
             </div>
-          </>
-        )}
+          )}
 
-        {verificationResult && (
-          <>
-            <Separator />
+          {verificationResult && (
             <div className="space-y-4">
+              <Separator />
               <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">
-                  3
-                </Badge>
+                <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">3</Badge>
                 <h3 className="font-semibold">Verification Result</h3>
               </div>
-
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-3">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-accent" />
                   <span className="font-medium text-accent">Verification Successful</span>
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Chain:</span>
-                    <Badge variant="secondary">{verificationResult.chainId}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Address:</span>
-                    <span className="font-mono">{verificationResult.address}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Proof Hash:</span>
-                    <div className="flex items-center space-x-1">
-                      <span className="font-mono text-xs">{verificationResult.proofHash.slice(0, 10)}...</span>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(verificationResult.proofHash)}>
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Chain:</span>
+                  <Badge variant="secondary">{verificationResult.chainId}</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Address:</span>
+                  <span className="font-mono">{verificationResult.address}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Proof Hash:</span>
+                  <span className="font-mono">{verificationResult.proofHash.slice(0, 10)}...</span>
                 </div>
               </div>
 
@@ -347,13 +297,11 @@ const LinkChain = ({ walletAddress, provider }) => {
                 <Button onClick={storeOnChain} disabled={isStoringOnChain} className="flex-1 bg-gradient-primary hover:opacity-90">
                   {isStoringOnChain ? "Storing..." : "Store On-Chain"}
                 </Button>
-                <Button variant="outline" onClick={resetFlow}>
-                  Link Another
-                </Button>
+                <Button variant="outline" onClick={resetFlow}>Link Another</Button>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

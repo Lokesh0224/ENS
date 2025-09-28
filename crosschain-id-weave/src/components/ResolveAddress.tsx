@@ -59,7 +59,7 @@ const ResolveAddress: React.FC<ResolveAddressProps> = () => {
 
     try {
       if (selectedChain === 'ethereum') {
-        const provider = new ethers.JsonRpcProvider("https://eth-mainnet.g.alchemy.com/v2/uUU2QYr-RclJc_VQ6TI2p");
+        const provider = new ethers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/iWeLgwatPX1LUh6hJors6");
 
         const ethAddress = await provider.resolveName(ensName);
 

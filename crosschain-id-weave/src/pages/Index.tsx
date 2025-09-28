@@ -64,10 +64,7 @@ const Index = () => {
               </TabsList>
               
               <TabsContent value="link" className="mt-6">
-                <LinkChain 
-                  walletAddress={walletAddress}
-                  provider={provider}
-                />
+                <LinkChain {...({ walletAddress, provider } as any)} />
               </TabsContent>
               
               <TabsContent value="resolve" className="mt-6">
